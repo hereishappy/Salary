@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>वेतन कैलकुलेटर</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0; padding: 0;
-      background-color: #f2f2f2;
+      background-color: #f5f7fa;
+      color: #333;
     }
     .container {
       max-width: 500px;
@@ -28,6 +30,7 @@
       display: block;
       margin-top: 15px;
       font-weight: 600;
+      color: #444;
     }
     input, select {
       width: 100%;
@@ -36,41 +39,158 @@
       margin-top: 5px;
       border: 1px solid #ccc;
       border-radius: 8px;
+      transition: border-color 0.3s;
     }
-    .result {
-      margin-top: 25px;
-      background-color: #fafafa;
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+    .date-container {
+      display: flex;
+      gap: 10px;
+    }
+    .date-container > div {
+      flex: 1;
+    }
+    .id-card {
+      width: 3.5in;
+      height: auto;
       padding: 15px;
-      border-radius: 10px;
       border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin: 20px auto;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 13px;
+      line-height: 1.4;
     }
-    .result p {
-      margin: 8px 0;
-      font-size: 16px;
+    .id-card p {
+      margin: 4px 0;
+      display: flex;
+      justify-content: space-between;
     }
-    hr {
-      margin: 15px 0;
+    .id-card p strong {
+      color: #555;
     }
-    @media screen and (max-width: 600px) {
-      .container {
-        margin: 10px;
-        padding: 15px;
+    .signature {
+      text-align: right;
+      margin-right: 10px;
+      font-weight: bold;
+      font-size: 11px;
+      margin-top: 10px;
+      border-top: 1px dashed #ccc;
+      padding-top: 8px;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #3a7bc8;
+    }
+    .reset {
+      background-color: #e74c3c;
+    }
+    .reset:hover {
+      background-color: #c0392b;
+    }
+    .download {
+      background-color: #27ae60;
+    }
+    .download:hover {
+      background-color: #219653;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .header h3 {
+      margin: 5px 0;
+      color: #333;
+    }
+    .header p {
+      margin: 5px 0;
+      color: #666;
+      font-size: 12px;
+    }
+    .total-row {
+      border-top: 1px solid #eee;
+      margin-top: 8px;
+      padding-top: 8px;
+      font-weight: bold;
+    }
+    @media print {
+      .container, .buttons {
+        display: none;
       }
-      input, select {
-        font-size: 15px;
+      .id-card {
+        box-shadow: none;
+        border: 1px solid #000;
+        margin: 0;
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>💼 वेतन कैलकुलेटर</h2>
+    <h2 id="title">💼 वेतन कैलकुलेटर</h2>
+    <label for="languageSelect" id="langLabel">भाषा चुनें / Select Language</label>
+    <select id="languageSelect" onchange="switchLanguage()">
+      <option value="hi">हिंदी</option>
+      <option value="en">English</option>
+    </select>
 
-    <label for="workerName">कर्मी का नाम</label>
-    <input type="text" id="workerName" placeholder="नाम दर्ज करें" />
+    <div class="date-container">
+      <div>
+        <label for="monthSelect" id="monthLabel">महीना</label>
+        <select id="monthSelect" onchange="updatePayPeriod()">
+          <option value="0">जनवरी</option>
+          <option value="1">फरवरी</option>
+          <option value="2">मार्च</option>
+          <option value="3">अप्रैल</option>
+          <option value="4">मई</option>
+          <option value="5">जून</option>
+          <option value="6">जुलाई</option>
+          <option value="7">अगस्त</option>
+          <option value="8">सितंबर</option>
+          <option value="9">अक्टूबर</option>
+          <option value="10">नवंबर</option>
+          <option value="11">दिसंबर</option>
+        </select>
+      </div>
+      <div>
+        <label for="yearSelect" id="yearLabel">वर्ष</label>
+        <select id="yearSelect" onchange="updatePayPeriod()">
+          <!-- Will be populated by JavaScript -->
+        </select>
+      </div>
+    </div>
 
-    <label for="designation">पद</label>
-    <select id="designation">
+    <label for="workerName" id="nameLabel">कर्मी का नाम</label>
+    <input type="text" id="workerName" placeholder="नाम दर्ज करें" oninput="calculateSalary()" />
+
+    <label for="designation" id="designationLabel">पद</label>
+    <select id="designation" onchange="calculateSalary()">
       <option value="">--चयन करें--</option>
       <option value="scaffolder">स्कैफोल्डर</option>
       <option value="helper">हेल्पर</option>
@@ -78,103 +198,361 @@
       <option value="driver">ड्राइवर</option>
     </select>
 
-    <label for="workedDays">कार्य दिवस (अधिकतम: 31)</label>
-    <input type="number" id="workedDays" max="31" min="0" />
+    <label for="workedDays" id="daysLabel">कार्य दिवस (अधिकतम: 26)</label>
+    <input type="number" id="workedDays" max="26" min="0" value="0" oninput="calculateSalary()" />
 
-    <label for="otHours">ओटी घंटे</label>
-    <input type="number" id="otHours" min="0" />
+    <label for="otHours" id="otLabel">ओटी घंटे</label>
+    <input type="number" id="otHours" min="0" value="0" oninput="calculateSalary()" />
 
-    <label for="advance">अग्रिम (₹)</label>
-    <input type="number" id="advance" value="0" min="0" />
+    <label for="advance" id="advanceLabel">अग्रिम (₹)</label>
+    <input type="number" id="advance" value="0" min="0" oninput="calculateSalary()" />
 
-    <div class="result" id="output">
-      <p><strong>नाम:</strong> <span id="displayName">-</span></p>
-      <p><strong>फिक्स्ड ग्रॉस:</strong> ₹<span id="gross">0</span></p>
-      <p><strong>ओटी राशि:</strong> ₹<span id="otAmount">0</span></p>
-      <p><strong>कुल कमाई:</strong> ₹<span id="totalEarnings">0</span></p>
-      <p><strong>पीएफ कटौती:</strong> ₹<span id="pf">0</span></p>
-      <p><strong>ईएसआई कटौती:</strong> ₹<span id="esi">0</span></p>
-      <p><strong>पीटी कटौती:</strong> ₹<span id="pt">0</span></p>
-      <p><strong>अग्रिम कटौती:</strong> ₹<span id="advanceOut">0</span></p>
-      <p><strong>कुल कटौती:</strong> ₹<span id="totalDeductions">0</span></p>
-      <hr />
-      <p><strong>शुद्ध वेतन:</strong> ₹<span id="netPayable">0</span></p>
-      <h4 style="margin-top: 40px; text-align: right; margin-right: 20px;">
-        अनुमापक अधिकारी<br/>
-        गुरविंदर सिंह
-      </h4>
+    <div class="buttons">
+      <button onclick="calculateSalary()" id="calcButton">गणना करें</button>
+      <button onclick="resetForm()" class="reset" id="resetButton">रीसेट</button>
+      <button onclick="downloadPDF()" class="download" id="downloadButton">डाउनलोड PDF</button>
     </div>
+  </div>
+
+  <div class="id-card" id="output">
+    <div class="header">
+      <h3 id="companyName">वेतन अनुमान</h3>
+      <p id="payPeriod">वेतन अवधि: जनवरी 2023</p>
+    </div>
+    
+    <p><strong id="nameText">नाम:</strong> <span id="displayName">-</span></p>
+    <p><strong id="designationText">पद:</strong> <span id="displayDesignation">-</span></p>
+    <p><strong id="daysWorkedText">कार्य दिवस:</strong> <span id="displayDays">0</span></p>
+    <p><strong id="grossText">फिक्स्ड ग्रॉस:</strong> <span id="gross">₹0</span></p>
+    <p><strong id="otHoursText">ओटी घंटे:</strong> <span id="displayOtHours">0</span></p>
+    <p><strong id="otAmountText">ओटी राशि:</strong> <span id="otAmount">₹0</span></p>
+    <p><strong id="earningsText">कुल कमाई:</strong> <span id="totalEarnings">₹0</span></p>
+    <p><strong id="pfText">पीएफ कटौती:</strong> <span id="pf">₹0</span></p>
+    <p><strong id="esiText">ईएसआई कटौती:</strong> <span id="esi">₹0</span></p>
+    <p><strong id="ptText">पीटी कटौती:</strong> <span id="pt">₹0</span></p>
+    <p><strong id="advanceText">अग्रिम:</strong> <span id="advanceOut">₹0</span></p>
+    <p><strong id="deductText">कुल कटौती:</strong> <span id="totalDeductions">₹0</span></p>
+    <p class="total-row"><strong id="netText">शुद्ध वेतन:</strong> <span id="netPayable">₹0</span></p>
+    <p class="signature">
+      <span id="signingAuthority">अनुमापक अधिकारी</span><br/>
+      <span id="signingName">गुरविंदर सिंह</span>
+    </p>
   </div>
 
   <script>
     const salaryData = {
-      scaffolder: {
-        fixedGross: 19394,
-        otRate: 144.6 * 0.94,
-        pf: 1800,
-        esi: 183,
-        pt: 200
+      scaffolder: { fixedGross: 19394, otRate: 144.6 * 0.94, pf: 1800, esi: 183, pt: 200 },
+      helper:     { fixedGross: 17016, otRate: 141.0 * 0.94, pf: 1760, esi: 159, pt: 200 },
+      foreman:    { fixedGross: 22733, otRate: 177.4 * 0.94, pf: 1800, esi: 0, pt: 200 },
+      driver:     { fixedGross: 21733, otRate: 144.6 * 0.94, pf: 1800, esi: 183, pt: 200 }
+    };
+
+    const translations = {
+      hi: {
+        title: "💼 वेतन कैलकुलेटर",
+        langLabel: "भाषा चुनें / Select Language",
+        nameLabel: "कर्मी का नाम",
+        designationLabel: "पद",
+        daysLabel: "कार्य दिवस (अधिकतम: 26)",
+        otLabel: "ओटी घंटे",
+        advanceLabel: "अग्रिम (₹)",
+        calcButton: "गणना करें",
+        resetButton: "रीसेट",
+        downloadButton: "डाउनलोड PDF",
+        nameText: "नाम:",
+        designationText: "पद:",
+        daysWorkedText: "कार्य दिवस:",
+        grossText: "फिक्स्ड ग्रॉस:",
+        otHoursText: "ओटी घंटे:",
+        otAmountText: "ओटी राशि:",
+        earningsText: "कुल कमाई:",
+        pfText: "पीएफ कटौती:",
+        esiText: "ईएसआई कटौती:",
+        ptText: "पीटी कटौती:",
+        advanceText: "अग्रिम:",
+        deductText: "कुल कटौती:",
+        netText: "शुद्ध वेतन:",
+        companyName: "वेतन अनुमान",
+        payPeriod: "वेतन अवधि:",
+        signingAuthority: "अनुमापक अधिकारी",
+        signingName: "गुरविंदर सिंह",
+        monthLabel: "महीना",
+        yearLabel: "वर्ष",
+        months: [
+          "जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून", 
+          "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"
+        ],
+        designations: {
+          "": "--चयन करें--",
+          "scaffolder": "स्कैफोल्डर",
+          "helper": "हेल्पर",
+          "foreman": "फोरमैन",
+          "driver": "ड्राइवर"
+        }
       },
-      helper: {
-        fixedGross: 17016,
-        otRate: 141.0 * 0.94,
-        pf: 1760,
-        esi: 159,
-        pt: 200
-      },
-      foreman: {
-        fixedGross: 22733,
-        otRate: 177.4 * 0.94,
-        pf: 1800,
-        esi: 0,
-        pt: 200
-      },
-      driver: {
-        fixedGross: 21733,
-        otRate: 177 * 0.94,
-        pf: 1800,
-        esi: 0,
-        pt: 200
+      en: {
+        title: "💼 Salary Calculator",
+        langLabel: "Select Language / भाषा चुनें",
+        nameLabel: "Worker Name",
+        designationLabel: "Designation",
+        daysLabel: "Days Worked (Max: 26)",
+        otLabel: "Overtime Hours",
+        advanceLabel: "Advance (₹)",
+        calcButton: "Calculate",
+        resetButton: "Reset",
+        downloadButton: "Download PDF",
+        nameText: "Name:",
+        designationText: "Designation:",
+        daysWorkedText: "Days Worked:",
+        grossText: "Fixed Gross:",
+        otHoursText: "OT Hours:",
+        otAmountText: "OT Amount:",
+        earningsText: "Total Earnings:",
+        pfText: "PF Deduction:",
+        esiText: "ESI Deduction:",
+        ptText: "PT Deduction:",
+        advanceText: "Advance:",
+        deductText: "Total Deductions:",
+        netText: "Net Payable:",
+        companyName: "Salary Estimation",
+        payPeriod: "Pay Period:",
+        signingAuthority: "Measuring Authority",
+        signingName: "Gurvinder Singh",
+        monthLabel: "Month",
+        yearLabel: "Year",
+        months: [
+          "January", "February", "March", "April", "May", "June", 
+          "July", "August", "September", "October", "November", "December"
+        ],
+        designations: {
+          "": "--Select--",
+          "scaffolder": "Scaffolder",
+          "helper": "Helper",
+          "foreman": "Foreman",
+          "driver": "Driver"
+        }
       }
     };
 
-    const inputs = ["designation", "workedDays", "otHours", "advance", "workerName"];
-    inputs.forEach(id => document.getElementById(id).addEventListener("input", calculate));
-
-    function calculate() {
-      const name = document.getElementById("workerName").value;
-      const role = document.getElementById("designation").value;
-      const days = Number(document.getElementById("workedDays").value);
-      const ot = Number(document.getElementById("otHours").value);
-      const adv = Number(document.getElementById("advance").value);
-
-      document.getElementById("displayName").textContent = name || '-';
-
-      if (!role || days < 0 || days > 31) return;
-
-      const data = salaryData[role];
-      const perDayWage = data.fixedGross / 26;
-      const grossAmt = perDayWage * days;
-      const otAmt = data.otRate * ot;
-
-      const pfAmt = (data.pf / 26) * days;
-      const esiAmt = (data.esi / 26) * days;
-      const ptAmt = data.pt;
-
-      const totalEarn = grossAmt + otAmt;
-      const totalDeduct = pfAmt + esiAmt + ptAmt + adv;
-      const netPay = totalEarn - totalDeduct;
-
-      document.getElementById("gross").textContent = Math.round(grossAmt);
-      document.getElementById("otAmount").textContent = Math.round(otAmt);
-      document.getElementById("totalEarnings").textContent = Math.round(totalEarn);
-      document.getElementById("pf").textContent = Math.round(pfAmt);
-      document.getElementById("esi").textContent = Math.round(esiAmt);
-      document.getElementById("pt").textContent = Math.round(ptAmt);
-      document.getElementById("advanceOut").textContent = Math.round(adv);
-      document.getElementById("totalDeductions").textContent = Math.round(totalDeduct);
-      document.getElementById("netPayable").textContent = Math.round(netPay);
+    // Populate year dropdown
+    function populateYearDropdown() {
+      const yearSelect = document.getElementById("yearSelect");
+      const currentYear = new Date().getFullYear();
+      
+      // Add years from current year to 5 years in the future
+      for (let year = currentYear - 2; year <= currentYear + 5; year++) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        if (year === currentYear) {
+          option.selected = true;
+        }
+        yearSelect.appendChild(option);
+      }
     }
+
+    // Update pay period text based on selected month and year
+    function updatePayPeriod() {
+      const monthIndex = parseInt(document.getElementById("monthSelect").value);
+      const year = document.getElementById("yearSelect").value;
+      const lang = document.getElementById("languageSelect").value;
+      
+      const monthName = translations[lang].months[monthIndex];
+      const payPeriodText = `${translations[lang].payPeriod} ${monthName} ${year}`;
+      
+      document.getElementById("payPeriod").textContent = payPeriodText;
+    }
+
+    function switchLanguage() {
+      const lang = document.getElementById("languageSelect").value;
+      const t = translations[lang];
+      
+      // Update all text elements
+      document.getElementById("title").textContent = t.title;
+      document.getElementById("langLabel").textContent = t.langLabel;
+      document.getElementById("nameLabel").textContent = t.nameLabel;
+      document.getElementById("designationLabel").textContent = t.designationLabel;
+      document.getElementById("daysLabel").textContent = t.daysLabel;
+      document.getElementById("otLabel").textContent = t.otLabel;
+      document.getElementById("advanceLabel").textContent = t.advanceLabel;
+      document.getElementById("calcButton").textContent = t.calcButton;
+      document.getElementById("resetButton").textContent = t.resetButton;
+      document.getElementById("downloadButton").textContent = t.downloadButton;
+      document.getElementById("nameText").textContent = t.nameText;
+      document.getElementById("designationText").textContent = t.designationText;
+      document.getElementById("daysWorkedText").textContent = t.daysWorkedText;
+      document.getElementById("grossText").textContent = t.grossText;
+      document.getElementById("otHoursText").textContent = t.otHoursText;
+      document.getElementById("otAmountText").textContent = t.otAmountText;
+      document.getElementById("earningsText").textContent = t.earningsText;
+      document.getElementById("pfText").textContent = t.pfText;
+      document.getElementById("esiText").textContent = t.esiText;
+      document.getElementById("ptText").textContent = t.ptText;
+      document.getElementById("advanceText").textContent = t.advanceText;
+      document.getElementById("deductText").textContent = t.deductText;
+      document.getElementById("netText").textContent = t.netText;
+      document.getElementById("companyName").textContent = t.companyName;
+      document.getElementById("signingAuthority").textContent = t.signingAuthority;
+      document.getElementById("signingName").textContent = t.signingName;
+      document.getElementById("monthLabel").textContent = t.monthLabel;
+      document.getElementById("yearLabel").textContent = t.yearLabel;
+      
+      // Update month dropdown
+      const monthSelect = document.getElementById("monthSelect");
+      const currentMonthValue = monthSelect.value;
+      monthSelect.innerHTML = "";
+      
+      t.months.forEach((month, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = month;
+        monthSelect.appendChild(option);
+      });
+      
+      monthSelect.value = currentMonthValue;
+      
+      // Update designation dropdown
+      const designationSelect = document.getElementById("designation");
+      const currentValue = designationSelect.value;
+      designationSelect.innerHTML = "";
+      
+      for (const [value, text] of Object.entries(t.designations)) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = text;
+        designationSelect.appendChild(option);
+      }
+      
+      designationSelect.value = currentValue;
+      
+      // Update placeholder
+      document.getElementById("workerName").placeholder = lang === "hi" ? "नाम दर्ज करें" : "Enter name";
+      
+      // Update pay period
+      updatePayPeriod();
+      
+      // Recalculate to update displayed designation in output
+      calculateSalary();
+    }
+
+    function calculateSalary() {
+      const designation = document.getElementById("designation").value;
+      const workedDays = parseFloat(document.getElementById("workedDays").value) || 0;
+      const otHours = parseFloat(document.getElementById("otHours").value) || 0;
+      const advanceAmount = parseFloat(document.getElementById("advance").value) || 0;
+      const workerName = document.getElementById("workerName").value || "-";
+      const lang = document.getElementById("languageSelect").value;
+      
+      // Display name
+      document.getElementById("displayName").textContent = workerName;
+      
+      // Display designation in selected language
+      const designationText = designation ? translations[lang].designations[designation] : "-";
+      document.getElementById("displayDesignation").textContent = designationText;
+      
+      // Display days worked
+      document.getElementById("displayDays").textContent = workedDays;
+      
+      // Display OT hours
+      document.getElementById("displayOtHours").textContent = otHours;
+      
+      if (!designation) {
+        resetCalculations();
+        return;
+      }
+      
+      const data = salaryData[designation];
+      if (!data) {
+        resetCalculations();
+        return;
+      }
+      
+      // Calculate salary components
+      const daysInMonth = 26; // Using 26 days as standard working days in a month
+      const dailyGross = data.fixedGross / daysInMonth;
+      const earnedGross = Math.round(dailyGross * workedDays);
+      const otAmount = Math.round(data.otRate * otHours);
+      const totalEarnings = earnedGross + otAmount;
+      
+      // Calculate deductions
+      const pfDeduction = Math.min(data.pf, Math.round(data.pf * workedDays / daysInMonth));
+      const esiDeduction = Math.min(data.esi, Math.round(data.esi * workedDays / daysInMonth));
+      const ptDeduction = Math.min(data.pt, Math.round(data.pt * workedDays / daysInMonth));
+      const totalDeductions = pfDeduction + esiDeduction + ptDeduction + advanceAmount;
+      
+      // Calculate net payable
+      const netPayable = totalEarnings - totalDeductions;
+      
+      // Update the output
+      document.getElementById("gross").textContent = `₹${earnedGross}`;
+      document.getElementById("otAmount").textContent = `₹${otAmount}`;
+      document.getElementById("totalEarnings").textContent = `₹${totalEarnings}`;
+      document.getElementById("pf").textContent = `₹${pfDeduction}`;
+      document.getElementById("esi").textContent = `₹${esiDeduction}`;
+      document.getElementById("pt").textContent = `₹${ptDeduction}`;
+      document.getElementById("advanceOut").textContent = `₹${advanceAmount}`;
+      document.getElementById("totalDeductions").textContent = `₹${totalDeductions}`;
+      document.getElementById("netPayable").textContent = `₹${netPayable}`;
+    }
+    
+    function resetCalculations() {
+      document.getElementById("gross").textContent = "₹0";
+      document.getElementById("otAmount").textContent = "₹0";
+      document.getElementById("totalEarnings").textContent = "₹0";
+      document.getElementById("pf").textContent = "₹0";
+      document.getElementById("esi").textContent = "₹0";
+      document.getElementById("pt").textContent = "₹0";
+      document.getElementById("advanceOut").textContent = "₹0";
+      document.getElementById("totalDeductions").textContent = "₹0";
+      document.getElementById("netPayable").textContent = "₹0";
+    }
+    
+    function resetForm() {
+      document.getElementById("workerName").value = "";
+      document.getElementById("designation").value = "";
+      document.getElementById("workedDays").value = "0";
+      document.getElementById("otHours").value = "0";
+      document.getElementById("advance").value = "0";
+      document.getElementById("displayName").textContent = "-";
+      document.getElementById("displayDesignation").textContent = "-";
+      document.getElementById("displayDays").textContent = "0";
+      document.getElementById("displayOtHours").textContent = "0";
+      resetCalculations();
+    }
+    
+    function downloadPDF() {
+      const element = document.getElementById("output");
+      const workerName = document.getElementById("workerName").value || "salary";
+      const monthIndex = parseInt(document.getElementById("monthSelect").value);
+      const year = document.getElementById("yearSelect").value;
+      const lang = document.getElementById("languageSelect").value;
+      const monthName = translations[lang].months[monthIndex];
+      
+      const options = {
+        margin: 10,
+        filename: `${workerName}-${monthName}-${year}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+      };
+      
+      html2pdf().from(element).set(options).save();
+    }
+    
+    // Set current month in dropdown
+    function setCurrentMonth() {
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      document.getElementById("monthSelect").value = currentMonth;
+    }
+    
+    // Initialize
+    window.onload = function() {
+      populateYearDropdown();
+      setCurrentMonth();
+      updatePayPeriod();
+      switchLanguage();
+    };
   </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96390d3466bf49d5',t:'MTc1MzI1MTQxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
