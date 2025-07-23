@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>वेतन कैलकुलेटर</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -111,10 +112,10 @@
     .reset:hover {
       background-color: #c0392b;
     }
-    .download {
+    .submit {
       background-color: #27ae60;
     }
-    .download:hover {
+    .submit:hover {
       background-color: #219653;
     }
     .header {
@@ -138,6 +139,43 @@
       padding-top: 8px;
       font-weight: bold;
     }
+    #notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #27ae60;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 1000;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     @media print {
       .container, .buttons {
         display: none;
@@ -152,6 +190,11 @@
   </style>
 </head>
 <body>
+  <div id="notification">वेतन पर्ची सफलतापूर्वक डाउनलोड की गई!</div>
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+  </div>
+  
   <div class="container">
     <h2 id="title">💼 वेतन कैलकुलेटर</h2>
     <label for="languageSelect" id="langLabel">भाषा चुनें / Select Language</label>
@@ -210,7 +253,7 @@
     <div class="buttons">
       <button onclick="calculateSalary()" id="calcButton">गणना करें</button>
       <button onclick="resetForm()" class="reset" id="resetButton">रीसेट</button>
-      <button onclick="downloadPDF()" class="download" id="downloadButton">डाउनलोड PDF</button>
+      <button onclick="submitForm()" class="submit" id="submitButton">जमा करें</button>
     </div>
   </div>
 
@@ -258,7 +301,7 @@
         advanceLabel: "अग्रिम (₹)",
         calcButton: "गणना करें",
         resetButton: "रीसेट",
-        downloadButton: "डाउनलोड PDF",
+        submitButton: "जमा करें",
         nameText: "नाम:",
         designationText: "पद:",
         daysWorkedText: "कार्य दिवस:",
@@ -278,6 +321,7 @@
         signingName: "गुरविंदर सिंह",
         monthLabel: "महीना",
         yearLabel: "वर्ष",
+        notification: "वेतन पर्ची सफलतापूर्वक डाउनलोड की गई!",
         months: [
           "जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून", 
           "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"
@@ -300,7 +344,7 @@
         advanceLabel: "Advance (₹)",
         calcButton: "Calculate",
         resetButton: "Reset",
-        downloadButton: "Download PDF",
+        submitButton: "Submit",
         nameText: "Name:",
         designationText: "Designation:",
         daysWorkedText: "Days Worked:",
@@ -320,6 +364,7 @@
         signingName: "Gurvinder Singh",
         monthLabel: "Month",
         yearLabel: "Year",
+        notification: "Salary slip successfully downloaded!",
         months: [
           "January", "February", "March", "April", "May", "June", 
           "July", "August", "September", "October", "November", "December"
@@ -377,7 +422,7 @@
       document.getElementById("advanceLabel").textContent = t.advanceLabel;
       document.getElementById("calcButton").textContent = t.calcButton;
       document.getElementById("resetButton").textContent = t.resetButton;
-      document.getElementById("downloadButton").textContent = t.downloadButton;
+      document.getElementById("submitButton").textContent = t.submitButton;
       document.getElementById("nameText").textContent = t.nameText;
       document.getElementById("designationText").textContent = t.designationText;
       document.getElementById("daysWorkedText").textContent = t.daysWorkedText;
@@ -396,6 +441,7 @@
       document.getElementById("signingName").textContent = t.signingName;
       document.getElementById("monthLabel").textContent = t.monthLabel;
       document.getElementById("yearLabel").textContent = t.yearLabel;
+      document.getElementById("notification").textContent = t.notification;
       
       // Update month dropdown
       const monthSelect = document.getElementById("monthSelect");
@@ -520,23 +566,120 @@
       resetCalculations();
     }
     
-    function downloadPDF() {
+    function showNotification() {
+      const notification = document.getElementById("notification");
+      notification.style.display = "block";
+      
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 3000);
+    }
+    
+    function showLoading(show) {
+      document.getElementById("loading").style.display = show ? "flex" : "none";
+    }
+    
+    // Function to convert canvas to blob
+    function canvasToBlob(canvas) {
+      return new Promise(resolve => {
+        canvas.toBlob(blob => {
+          resolve(blob);
+        }, 'image/jpeg', 0.95);
+      });
+    }
+    
+    // Function to download blob as file
+    function downloadBlob(blob, filename) {
+      // Use FileSaver.js to save the blob
+      saveAs(blob, filename);
+    }
+    
+    async function submitForm() {
+      // First ensure calculations are up to date
+      calculateSalary();
+      
+      // Show loading indicator
+      showLoading(true);
+      
+      try {
+        // Get the salary slip element
+        const element = document.getElementById("output");
+        
+        // Get filename components
+        const workerName = document.getElementById("workerName").value || "salary";
+        const monthIndex = parseInt(document.getElementById("monthSelect").value);
+        const year = document.getElementById("yearSelect").value;
+        const lang = document.getElementById("languageSelect").value;
+        const monthName = translations[lang].months[monthIndex];
+        const filename = `${workerName}-${monthName}-${year}.jpg`;
+        
+        // Use html2canvas to convert the salary slip to an image
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          logging: false,
+          useCORS: true
+        });
+        
+        // Convert canvas to blob
+        const blob = await canvasToBlob(canvas);
+        
+        // Download the blob
+        downloadBlob(blob, filename);
+        
+        // Show success notification
+        showNotification();
+      } catch (error) {
+        console.error("Error generating salary slip:", error);
+        alert("Error generating salary slip. Please try again.");
+      } finally {
+        // Hide loading indicator
+        showLoading(false);
+      }
+    }
+    
+    // Alternative download method using data URL (fallback)
+    function downloadWithDataURL() {
+      // First ensure calculations are up to date
+      calculateSalary();
+      
+      // Get the salary slip element
       const element = document.getElementById("output");
+      
+      // Get filename components
       const workerName = document.getElementById("workerName").value || "salary";
       const monthIndex = parseInt(document.getElementById("monthSelect").value);
       const year = document.getElementById("yearSelect").value;
       const lang = document.getElementById("languageSelect").value;
       const monthName = translations[lang].months[monthIndex];
+      const filename = `${workerName}-${monthName}-${year}`;
       
-      const options = {
-        margin: 10,
-        filename: `${workerName}-${monthName}-${year}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
-      };
+      // Show loading indicator
+      showLoading(true);
       
-      html2pdf().from(element).set(options).save();
+      // Use html2canvas to convert the salary slip to an image
+      html2canvas(element, {
+        scale: 2,
+        backgroundColor: "#ffffff"
+      }).then(canvas => {
+        // Create a download link
+        const link = document.createElement('a');
+        link.download = filename + '.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show notification
+        showNotification();
+        
+        // Hide loading indicator
+        showLoading(false);
+      }).catch(error => {
+        console.error("Error generating salary slip:", error);
+        alert("Error generating salary slip. Please try again.");
+        showLoading(false);
+      });
     }
     
     // Set current month in dropdown
@@ -552,7 +695,20 @@
       setCurrentMonth();
       updatePayPeriod();
       switchLanguage();
+      
+      // Add event listener for submit button to handle both methods
+      document.getElementById("submitButton").addEventListener("click", function(e) {
+        e.preventDefault();
+        
+        // Try the FileSaver method first, fall back to data URL if it fails
+        try {
+          submitForm();
+        } catch (error) {
+          console.error("Primary download method failed, trying fallback:", error);
+          downloadWithDataURL();
+        }
+      });
     };
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96390d3466bf49d5',t:'MTc1MzI1MTQxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96391da3542c49d5',t:'MTc1MzI1MjA4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
