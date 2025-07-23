@@ -5,66 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Salary Calculator</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 30px auto;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0; padding: 0;
+      background-color: #f2f2f2;
+    }
+    .container {
+      max-width: 500px;
+      margin: 20px auto;
       padding: 20px;
-      background: #f4f4f4;
-      border-radius: 10px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
     }
     label {
       display: block;
       margin-top: 15px;
+      font-weight: 600;
     }
     input, select {
       width: 100%;
       padding: 10px;
+      font-size: 16px;
       margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
     .result {
-      margin-top: 20px;
+      margin-top: 25px;
+      background-color: #fafafa;
       padding: 15px;
-      background: #fff;
       border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
+      border: 1px solid #ddd;
     }
-    h2 {
-      text-align: center;
+    .result p {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    hr {
+      margin: 15px 0;
+    }
+    @media screen and (max-width: 600px) {
+      .container {
+        margin: 10px;
+        padding: 15px;
+      }
+      input, select {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>Worker Salary Calculator</h2>
+  <div class="container">
+    <h2>💼 Salary Calculator</h2>
 
-  <label for="designation">Designation:</label>
-  <select id="designation">
-    <option value="">--Select--</option>
-    <option value="scaffolder">Scaffolder</option>
-    <option value="helper">Helper</option>
-    <option value="foreman">Foreman</option>
-  </select>
+    <label for="designation">Designation</label>
+    <select id="designation">
+      <option value="">--Select--</option>
+      <option value="scaffolder">Scaffolder</option>
+      <option value="helper">Helper</option>
+      <option value="foreman">Foreman</option>
+      <option value="driver">Driver</option>
+    </select>
 
-  <label for="workedDays">Worked Days (out of 26):</label>
-  <input type="number" id="workedDays" min="0" max="26" />
+    <label for="workedDays">Worked Days (Max: 31)</label>
+    <input type="number" id="workedDays" max="31" min="0" />
 
-  <label for="otHours">OT Hours:</label>
-  <input type="number" id="otHours" min="0" />
+    <label for="otHours">OT Hours</label>
+    <input type="number" id="otHours" min="0" />
 
-  <label for="advance">Advance Taken (₹):</label>
-  <input type="number" id="advance" min="0" value="0"/>
+    <label for="advance">Advance Taken (₹)</label>
+    <input type="number" id="advance" value="0" min="0" />
 
-  <div class="result" id="output">
-    <p><strong>Fixed Gross:</strong> ₹<span id="gross"></span></p>
-    <p><strong>OT Amount:</strong> ₹<span id="otAmount"></span></p>
-    <p><strong>Total Earnings:</strong> ₹<span id="totalEarnings"></span></p>
-    <p><strong>PF Deduction:</strong> ₹<span id="pf"></span></p>
-    <p><strong>ESI Deduction:</strong> ₹<span id="esi"></span></p>
-    <p><strong>PT Deduction:</strong> ₹<span id="pt"></span></p>
-    <p><strong>Advance Deduction:</strong> ₹<span id="advanceOut"></span></p>
-    <p><strong>Total Deductions:</strong> ₹<span id="totalDeductions"></span></p>
-    <hr>
-    <p><strong>Net Payable:</strong> ₹<span id="netPayable"></span></p>
+    <div class="result" id="output">
+      <p><strong>Fixed Gross:</strong> ₹<span id="gross">0</span></p>
+      <p><strong>OT Amount:</strong> ₹<span id="otAmount">0</span></p>
+      <p><strong>Total Earnings:</strong> ₹<span id="totalEarnings">0</span></p>
+      <p><strong>PF Deduction:</strong> ₹<span id="pf">0</span></p>
+      <p><strong>ESI Deduction:</strong> ₹<span id="esi">0</span></p>
+      <p><strong>PT Deduction:</strong> ₹<span id="pt">0</span></p>
+      <p><strong>Advance Deduction:</strong> ₹<span id="advanceOut">0</span></p>
+      <p><strong>Total Deductions:</strong> ₹<span id="totalDeductions">0</span></p>
+      <hr />
+      <p><strong>Net Payable:</strong> ₹<span id="netPayable">0</span></p>
+    </div>
   </div>
 
   <script>
@@ -72,56 +103,47 @@
       scaffolder: {
         fixedGross: 19394,
         otRate: 144.6,
-        pf: 1800, // updated
+        pf: 1800,
         esi: 183,
         pt: 200
       },
       helper: {
         fixedGross: 17016,
         otRate: 141.0,
-        pf: 1760, // updated
+        pf: 1760,
         esi: 159,
         pt: 200
       },
       foreman: {
         fixedGross: 22733,
         otRate: 177.4,
-        pf: 1800, // updated
+        pf: 1800,
+        esi: 0,
+        pt: 200
+      },
+      driver: {
+        fixedGross: 21733,
+        otRate: 177,
+        pf: 1800,
         esi: 0,
         pt: 200
       }
     };
 
-    const designation = document.getElementById("designation");
-    const workedDays = document.getElementById("workedDays");
-    const otHours = document.getElementById("otHours");
-    const advance = document.getElementById("advance");
-
-    const gross = document.getElementById("gross");
-    const otAmount = document.getElementById("otAmount");
-    const totalEarnings = document.getElementById("totalEarnings");
-    const pf = document.getElementById("pf");
-    const esi = document.getElementById("esi");
-    const pt = document.getElementById("pt");
-    const advanceOut = document.getElementById("advanceOut");
-    const totalDeductions = document.getElementById("totalDeductions");
-    const netPayable = document.getElementById("netPayable");
-
-    const inputs = [designation, workedDays, otHours, advance];
-
-    inputs.forEach(input => input.addEventListener("input", calculate));
+    const inputs = ["designation", "workedDays", "otHours", "advance"];
+    inputs.forEach(id => document.getElementById(id).addEventListener("input", calculate));
 
     function calculate() {
-      const role = designation.value;
-      const days = Number(workedDays.value);
-      const ot = Number(otHours.value);
-      const advanceAmt = Number(advance.value);
+      const role = document.getElementById("designation").value;
+      const days = Number(document.getElementById("workedDays").value);
+      const ot = Number(document.getElementById("otHours").value);
+      const adv = Number(document.getElementById("advance").value);
 
-      if (!role || days <= 0 || days > 26) return;
+      if (!role || days < 0 || days > 31) return;
 
       const data = salaryData[role];
-      const dailyGross = data.fixedGross / 26;
-      const grossAmt = dailyGross * days;
+      const perDayWage = data.fixedGross / 26;
+      const grossAmt = perDayWage * days;
       const otAmt = data.otRate * ot;
 
       const pfAmt = (data.pf / 26) * days;
@@ -129,18 +151,18 @@
       const ptAmt = data.pt;
 
       const totalEarn = grossAmt + otAmt;
-      const totalDeduct = pfAmt + esiAmt + ptAmt + advanceAmt;
+      const totalDeduct = pfAmt + esiAmt + ptAmt + adv;
       const netPay = totalEarn - totalDeduct;
 
-      gross.textContent = Math.round(grossAmt);
-      otAmount.textContent = Math.round(otAmt);
-      totalEarnings.textContent = Math.round(totalEarn);
-      pf.textContent = Math.round(pfAmt);
-      esi.textContent = Math.round(esiAmt);
-      pt.textContent = Math.round(ptAmt);
-      advanceOut.textContent = Math.round(advanceAmt);
-      totalDeductions.textContent = Math.round(totalDeduct);
-      netPayable.textContent = Math.round(netPay);
+      document.getElementById("gross").textContent = Math.round(grossAmt);
+      document.getElementById("otAmount").textContent = Math.round(otAmt);
+      document.getElementById("totalEarnings").textContent = Math.round(totalEarn);
+      document.getElementById("pf").textContent = Math.round(pfAmt);
+      document.getElementById("esi").textContent = Math.round(esiAmt);
+      document.getElementById("pt").textContent = Math.round(ptAmt);
+      document.getElementById("advanceOut").textContent = Math.round(adv);
+      document.getElementById("totalDeductions").textContent = Math.round(totalDeduct);
+      document.getElementById("netPayable").textContent = Math.round(netPay);
     }
   </script>
 </body>
