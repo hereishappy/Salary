@@ -66,6 +66,9 @@
   <div class="container">
     <h2>💼 Salary Calculator</h2>
 
+    <label for="workerName">Worker Name</label>
+    <input type="text" id="workerName" placeholder="Enter name" />
+
     <label for="designation">Designation</label>
     <select id="designation">
       <option value="">--Select--</option>
@@ -85,6 +88,7 @@
     <input type="number" id="advance" value="0" min="0" />
 
     <div class="result" id="output">
+      <p><strong>Name:</strong> <span id="displayName">-</span></p>
       <p><strong>Fixed Gross:</strong> ₹<span id="gross">0</span></p>
       <p><strong>OT Amount:</strong> ₹<span id="otAmount">0</span></p>
       <p><strong>Total Earnings:</strong> ₹<span id="totalEarnings">0</span></p>
@@ -102,42 +106,45 @@
     const salaryData = {
       scaffolder: {
         fixedGross: 19394,
-        otRate: 144.6,
+        otRate: 144.6 * 0.94,
         pf: 1800,
         esi: 183,
         pt: 200
       },
       helper: {
         fixedGross: 17016,
-        otRate: 141.0,
+        otRate: 141.0 * 0.94,
         pf: 1760,
         esi: 159,
         pt: 200
       },
       foreman: {
         fixedGross: 22733,
-        otRate: 177.4,
+        otRate: 177.4 * 0.94,
         pf: 1800,
         esi: 0,
         pt: 200
       },
       driver: {
         fixedGross: 21733,
-        otRate: 177,
+        otRate: 177 * 0.94,
         pf: 1800,
         esi: 0,
         pt: 200
       }
     };
 
-    const inputs = ["designation", "workedDays", "otHours", "advance"];
+    const inputs = ["designation", "workedDays", "otHours", "advance", "workerName"];
     inputs.forEach(id => document.getElementById(id).addEventListener("input", calculate));
 
     function calculate() {
+      const name = document.getElementById("workerName").value;
       const role = document.getElementById("designation").value;
       const days = Number(document.getElementById("workedDays").value);
       const ot = Number(document.getElementById("otHours").value);
       const adv = Number(document.getElementById("advance").value);
+
+      document.getElementById("displayName").textContent = name || '-';
 
       if (!role || days < 0 || days > 31) return;
 
