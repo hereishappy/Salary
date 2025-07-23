@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Salary Calculator</title>
+  <title>वेतन कैलकुलेटर</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -64,41 +64,45 @@
 </head>
 <body>
   <div class="container">
-    <h2>💼 Salary Calculator</h2>
+    <h2>💼 वेतन कैलकुलेटर</h2>
 
-    <label for="workerName">Worker Name</label>
-    <input type="text" id="workerName" placeholder="Enter name" />
+    <label for="workerName">कर्मी का नाम</label>
+    <input type="text" id="workerName" placeholder="नाम दर्ज करें" />
 
-    <label for="designation">Designation</label>
+    <label for="designation">पद</label>
     <select id="designation">
-      <option value="">--Select--</option>
-      <option value="scaffolder">Scaffolder</option>
-      <option value="helper">Helper</option>
-      <option value="foreman">Foreman</option>
-      <option value="driver">Driver</option>
+      <option value="">--चयन करें--</option>
+      <option value="scaffolder">स्कैफोल्डर</option>
+      <option value="helper">हेल्पर</option>
+      <option value="foreman">फोरमैन</option>
+      <option value="driver">ड्राइवर</option>
     </select>
 
-    <label for="workedDays">Worked Days (Max: 31)</label>
+    <label for="workedDays">कार्य दिवस (अधिकतम: 31)</label>
     <input type="number" id="workedDays" max="31" min="0" />
 
-    <label for="otHours">OT Hours</label>
+    <label for="otHours">ओटी घंटे</label>
     <input type="number" id="otHours" min="0" />
 
-    <label for="advance">Advance Taken (₹)</label>
+    <label for="advance">अग्रिम (₹)</label>
     <input type="number" id="advance" value="0" min="0" />
 
     <div class="result" id="output">
-      <p><strong>Name:</strong> <span id="displayName">-</span></p>
-      <p><strong>Fixed Gross:</strong> ₹<span id="gross">0</span></p>
-      <p><strong>OT Amount:</strong> ₹<span id="otAmount">0</span></p>
-      <p><strong>Total Earnings:</strong> ₹<span id="totalEarnings">0</span></p>
-      <p><strong>PF Deduction:</strong> ₹<span id="pf">0</span></p>
-      <p><strong>ESI Deduction:</strong> ₹<span id="esi">0</span></p>
-      <p><strong>PT Deduction:</strong> ₹<span id="pt">0</span></p>
-      <p><strong>Advance Deduction:</strong> ₹<span id="advanceOut">0</span></p>
-      <p><strong>Total Deductions:</strong> ₹<span id="totalDeductions">0</span></p>
+      <p><strong>नाम:</strong> <span id="displayName">-</span></p>
+      <p><strong>फिक्स्ड ग्रॉस:</strong> ₹<span id="gross">0</span></p>
+      <p><strong>ओटी राशि:</strong> ₹<span id="otAmount">0</span></p>
+      <p><strong>कुल कमाई:</strong> ₹<span id="totalEarnings">0</span></p>
+      <p><strong>पीएफ कटौती:</strong> ₹<span id="pf">0</span></p>
+      <p><strong>ईएसआई कटौती:</strong> ₹<span id="esi">0</span></p>
+      <p><strong>पीटी कटौती:</strong> ₹<span id="pt">0</span></p>
+      <p><strong>अग्रिम कटौती:</strong> ₹<span id="advanceOut">0</span></p>
+      <p><strong>कुल कटौती:</strong> ₹<span id="totalDeductions">0</span></p>
       <hr />
-      <p><strong>Net Payable:</strong> ₹<span id="netPayable">0</span></p>
+      <p><strong>शुद्ध वेतन:</strong> ₹<span id="netPayable">0</span></p>
+      <h4 style="margin-top: 40px; text-align: right; margin-right: 20px;">
+        अनुमापक अधिकारी<br/>
+        गुरविंदर सिंह
+      </h4>
     </div>
   </div>
 
